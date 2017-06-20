@@ -1,6 +1,6 @@
 'use strict';
 var Alexa = require('alexa-sdk');
-var syncRequest = require("sync-request")
+var request = require('request');
 
 //=========================================================================================================================================
 //TODO: The items below this comment need your attention.
@@ -38,22 +38,21 @@ var handlers = {
         this.emit('CountryInformationIntent');
     },
     'CountryInformationIntent': function () {
-        console.log(this.event.request.intent);
         var slotCountry = this.event.request.intent.slots.CountryName.value;
-        var data = "Sorry, I could not find the requested information for the country you asked";
-        // registering remote methods
-        var res = syncRequest('GET', 'https://restcountries.eu/rest/v2/name/'+slotCountry);
-        if(res.statusCode != 200){
-          data = "Sorry, I could not find the requested information for the country " + slotCountry;
-        }else {
-          var countryObj =JSON.parse(res.getBody('utf8'));
-          console.log(countryObj);
-          data = slotCountry + "is from "+ countryObj[0].region  + "region with "+  countryObj[0].capital + " as the capital city. It's currency is " +
-          data[0].currencies[0].name +"  It has around "+data[0].population+" in population.";
-        }
-        var randomFact = data;
-        var speechOutput =  randomFact;
-        this.emit(':tellWithCard', speechOutput, SKILL_NAME, randomFact)
+        var output = "Sorry, I could not find the requested information for the country you asked";
+        body = JSON.parse(body);
+        request.get('https://restcountries.eu/rest/v2/name/'+slotCountry, (err, res, body) => {
+            if(err || res.statusCode != 200){
+                output = "Sorry, I could not find the requested information for the country " + slotCountry;
+            }else {
+                let co =body[0];
+                randomFact = slotCountry + "is from "+ co.region + "region with "+  co.capital + " as the capital city. It's currency is " +
+                co.currencies[0].name +"  It has around "+co.population+" in population.";
+            }
+            let randomFact = output;
+            let speechOutput = output;
+            this.emit(':tellWithCard', speechOutput, SKILL_NAME, randomFact)
+        });
     },
     'AMAZON.HelpIntent': function () {
         var speechOutput = HELP_MESSAGE;
