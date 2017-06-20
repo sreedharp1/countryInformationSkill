@@ -17,13 +17,6 @@ var HELP_REPROMPT = "What can I help you with?";
 var STOP_MESSAGE = "Goodbye!";
 
 //=========================================================================================================================================
-//TODO: Replace this data with your own.  You can find translations of this data at http://github.com/alexa/skill-sample-node-js-fact/data
-//=========================================================================================================================================
-var indiaData = [
-    "India is an Asian country with New Delhi as the capital city. It's currency is Indian Rupee. It has around 1.2 Billion population."
-];
-
-//=========================================================================================================================================
 //Editing anything below this line might break your skill.
 //=========================================================================================================================================
 exports.handler = function(event, context, callback) {
@@ -43,15 +36,26 @@ var handlers = {
         var data = "Sorry, I could not find the requested information for the country you asked";
         // registering remote methods
         var res = syncRequest('GET', 'https://restcountries.eu/rest/v2/name/'+slotCountry);
+        //console.log(res);
         if(res.statusCode != 200){
           data = "Sorry, I could not find the requested information for the country " + slotCountry;
-        }else {
+        } else {
           var countryObj =JSON.parse(res.getBody('utf8'));
           console.log(countryObj);
-          data = slotCountry + "is from "+ countryObj[0].region  + "region with "+  countryObj[0].capital + " as the capital city. It's currency is " +
-          data[0].currencies[0].name +"  It has around "+data[0].population+" in population.";
+          if(countryObj.length == 1){
+              data = countryObj[0].name + " is from "+ countryObj[0].region  + " region with "+  countryObj[0].capital + " as the capital city. It's currency is " +
+              countryObj[0].currencies[0].name +". It has around "+countryObj[0].population+" in population.";
+          } else if (countryObj.length >= 2){
+              data = "Found multiple matches with country name " +slotCountry + ". Here is the information for first two matches: "
+              + countryObj[0].name  + " is from "+ countryObj[0].region  + " region with "+  countryObj[0].capital + " as the capital city. It's currency is " +
+              countryObj[0].currencies[0].name +". It has around "+countryObj[0].population+" in population."
+              + "And, " + countryObj[1].name  +
+              " is from "+ countryObj[1].region  + " region with "+  countryObj[1].capital + " as the capital city. It's currency is " +
+             countryObj[1].currencies[0].name +". It has around "+countryObj[1].population+" in population.";
+          }
         }
         var randomFact = data;
+        //console.log("Output Text:" + randomFact);
         var speechOutput =  randomFact;
         this.emit(':tellWithCard', speechOutput, SKILL_NAME, randomFact)
     },
