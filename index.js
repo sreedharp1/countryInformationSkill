@@ -12,7 +12,7 @@ var APP_ID = "amzn1.ask.skill.d14afcb5-1220-4781-b6db-7127045aedd7";
 
 var SKILL_NAME = "Country Information";
 var GET_FACT_MESSAGE = "Here's the information: ";
-var HELP_MESSAGE = "You can say tell me about country, or something about country or, you can say exit... What can I help you with?";
+var HELP_MESSAGE = "You can say - Ask Country Information to tell me about country India, or, you can say Open Country Information and search Australia, or exit... What can I help you with?";
 var HELP_REPROMPT = "What can I help you with?";
 var STOP_MESSAGE = "Goodbye!";
 
@@ -32,7 +32,17 @@ var handlers = {
     },
     'CountryInformationIntent': function () {
         console.log(this.event.request.intent);
-        var slotCountry = this.event.request.intent.slots.CountryName.value;
+        if(this.event.request.intent === undefined ){
+            this.emit('AMAZON.HelpIntent');
+            return;
+        }
+        var slots=this.event.request.intent.slots;
+        console.log(slots);
+        if(slots === undefined || slots.length === 0){
+            this.emit('AMAZON.HelpIntent');
+            return;
+        }
+        var slotCountry = slots.CountryName.value;
         var data = "Sorry, I could not find the requested information for the country you asked";
         // registering remote methods
         var res = syncRequest('GET', 'https://restcountries.eu/rest/v2/name/'+slotCountry);
@@ -46,9 +56,11 @@ var handlers = {
               data = countryObj[0].name + " is from "+ countryObj[0].region  + " region with "+  countryObj[0].capital + " as the capital city. It's currency is " +
               countryObj[0].currencies[0].name +". It has around "+countryObj[0].population+" in population.";
           } else if (countryObj.length >= 2){
+
               data = "Found multiple matches with country name " +slotCountry + ". Here is the information for first two matches: "
               + countryObj[0].name  + " is from "+ countryObj[0].region  + " region with "+  countryObj[0].capital + " as the capital city. It's currency is " +
               countryObj[0].currencies[0].name +". It has around "+countryObj[0].population+" in population."
+
               + "And, " + countryObj[1].name  +
               " is from "+ countryObj[1].region  + " region with "+  countryObj[1].capital + " as the capital city. It's currency is " +
              countryObj[1].currencies[0].name +". It has around "+countryObj[1].population+" in population.";
