@@ -53,23 +53,33 @@ var handlers = {
           var countryObj =JSON.parse(res.getBody('utf8'));
           console.log(countryObj);
           if(countryObj.length == 1){
-              data = countryObj[0].name + " is from "+ countryObj[0].region  + " region with "+  countryObj[0].capital + " as the capital city. It's currency is " +
-              countryObj[0].currencies[0].name +". It has around "+countryObj[0].population+" in population.";
+              data = countryObj[0].name + " is from "+ countryObj[0].region  + " region with "+  countryObj[0].capital + " as the capital city.";
+              // " It's currency is " + countryObj[0].currencies[0].name +". It has around "+countryObj[0].population+" in population.";
+              this.attributes['countryName']=countryObj[0].name;
+              this.attributes[countryObj[0].name]=countryObj[0];
+              this.emit(':ask', data+ " Do you like to know more about "+countryObj[0].name+"?");
           } else if (countryObj.length >= 2){
 
               data = "Found multiple matches with country name " +slotCountry + ". Here is the information for first two matches: "
-              + countryObj[0].name  + " is from "+ countryObj[0].region  + " region with "+  countryObj[0].capital + " as the capital city. It's currency is " +
-              countryObj[0].currencies[0].name +". It has around "+countryObj[0].population+" in population."
+              + countryObj[0].name  + " is from "+ countryObj[0].region  + " region with "+  countryObj[0].capital + " as the capital city.";
 
-              + "And, " + countryObj[1].name  +
-              " is from "+ countryObj[1].region  + " region with "+  countryObj[1].capital + " as the capital city. It's currency is " +
-             countryObj[1].currencies[0].name +". It has around "+countryObj[1].population+" in population.";
+              + " And, " + countryObj[1].name  +
+              " is from "+ countryObj[1].region  + " region with "+  countryObj[1].capital + " as the capital city.";
+              this.emit(':tell', data);
           }
         }
-        var randomFact = data;
-        //console.log("Output Text:" + randomFact);
-        var speechOutput =  randomFact;
-        this.emit(':tellWithCard', speechOutput, SKILL_NAME, randomFact)
+    },
+    'AMAZON.NoIntent': function () {
+        this.emit('AMAZON.StopIntent');
+    },
+    'AMAZON.YesIntent': function () {
+        var countryName = this.attributes['countryName'];
+        var countryDetails = this.attributes[countryName];
+
+        data = "Here is more about "+ countryName +". It's currency is " + countryDetails.currencies[0].name +". It has around "+countryDetails.population+" in population. Good bye !!";
+
+        this.emit(':tellWithCard', data, countryName, data);
+
     },
     'AMAZON.HelpIntent': function () {
         var speechOutput = HELP_MESSAGE;
